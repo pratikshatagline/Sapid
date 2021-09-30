@@ -3,13 +3,13 @@ from django.shortcuts import render
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from knox.models import AuthToken
-from .serializers import UserSerializer, RegisterSerializer, RestaurantSerializer
+from .serializers import UserSerializer, RegisterSerializer, RestaurantSerializer,MenuSerializer, MenuLikeSerializer
 from django.contrib.auth import login
 from rest_framework import permissions, status
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from knox.views import LoginView as KnoxLoginView
 from rest_framework.views import APIView
-from .models import Restaurant
+from .models import Menu, Restaurant, MenuLikes
 from rest_framework import filters
 from django.contrib.auth.models import User
 
@@ -49,24 +49,47 @@ class RestaurantAPI(APIView):
         return Response(serializer.data)
 
 class RestaurantListAPI(generics.ListAPIView):
-    queryset = Restaurant.objects.all()
+    queryset = Restaurant.objects.select_related()
     serializer_class = RestaurantSerializer
 
 class SearchAPI(APIView):
     def get(self, request):
         location = request.GET.get("location")
-        queryset = Restaurant.objects.filter(location=location)
-        response = []
-        if queryset:
-            fields = [
-                    "name",
-                    "location",
-                    "item_name",
-                    "like",
-                ]
-            for obj in (queryset):
-                data_dict = dict()
-                for field in fields:
-                    data_dict[field] = getattr(obj, field, None)
-                response.append(data_dict)
-        return Response(response)
+        queryset = Restaurant.objects.filter(location__icontains=location)
+        serializer = RestaurantSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+class MenuAPI(APIView):
+
+    def post(self, request):
+        serializer = MenuSerializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+
+        return Response(serializer.data)
+        
+    def get(self, request):
+        tasks = Menu.objects.all()
+        serializer = MenuSerializer(tasks, many=True)
+        return Response(serializer.data)
+
+class LikedAPI(APIView):
+
+    def get(self, request):#function to get total number of likes to particular post
+        #id = request.GET.get("id")
+        post = MenuLikes.objects.all() # find which post's likes are to be extracted
+        #like_count = post.likemenu.count()# counts total user likes ,besides my code is wrong
+        serializer = MenuLikeSerializer(post,many=True)
+        return Response(serializer.data)
+
+    def post(self,request):#function to add likes to post
+        # how do I check if user is already liked the post ?
+        id = request.GET.get("id")
+        likeusers = request.user
+        likemenu = Menu.objects.filter(id=id)
+        serializer = MenuLikeSerializer(data=request.data, many=True)
+        if serializer.is_valid():
+            serializer.save(likeusers,likemenu)
+            return Response(serializer.data,status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)

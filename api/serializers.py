@@ -1,5 +1,5 @@
 from django.db.models import fields
-from api.models import Restaurant
+from api.models import Menu, Restaurant, MenuLikes
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
@@ -22,7 +22,18 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 # Restaurant Serializer
+class MenuSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Menu
+        fields = ('id', 'item_name')
+
 class RestaurantSerializer(serializers.ModelSerializer):
+    menu = MenuSerializer(many=True,read_only=True)
     class Meta:
         model = Restaurant
-        fields = ('id', 'name', 'location', 'item_name', 'like')
+        fields = ('id', 'name', 'location', 'menu')
+
+class MenuLikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MenuLikes
+        fields = '__all__'
