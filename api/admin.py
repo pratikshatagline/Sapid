@@ -9,8 +9,10 @@ from django.shortcuts import render
 class RestaurantAdmin(admin.ModelAdmin):
     list_display = ['id', 'name', 'location']
 
+@admin.register(Menu)
+class RestaurantAdmin(admin.ModelAdmin):
+    list_display = ['id', 'restaurant_id', 'item_name', 'get_favourite']
 
-admin.site.register(Menu)
 admin.site.register(MenuLikes)
 
 class MyModelAdmin(admin.ModelAdmin):

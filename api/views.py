@@ -1,9 +1,9 @@
 from django.db.models import query
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from knox.models import AuthToken
-from .serializers import UserSerializer, RegisterSerializer, RestaurantSerializer,MenuSerializer, MenuLikeSerializer
+from .serializers import UserSerializer, RegisterSerializer, RestaurantSerializer,MenuSerializer, MenuLikeSerializer, FavouriteSerializer
 from django.contrib.auth import login
 from rest_framework import permissions, status
 from rest_framework.authtoken.serializers import AuthTokenSerializer
@@ -90,3 +90,28 @@ class LikedAPI(APIView):
             serializer.save(likeusers,likemenu)
             return Response(serializer.data,status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+class FavouriteAPI(APIView):
+    bad_request_message = 'An error has occurred'
+
+    def post(self,request):
+        menu = get_object_or_404(Menu,id=request.data.get('id'))
+        user = request.user
+        serializer = FavouriteSerializer(menu,many=True)
+        if user not in menu.favourite.all():
+            menu.favourite.add(user)
+            return Response({'detail': 'User added to item'}, status=status.HTTP_200_OK)
+        return Response({'detail': self.bad_request_message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+        #return Response("Added to favourite")
+
+class FavouriteListAPI(APIView):
+
+    def get(self,request):
+        user = request.user
+        print(user)
+        favourite_list = Menu.objects.filter(favourite=user)
+        serializer = FavouriteSerializer(favourite_list,many=True)
+
+        return Response(serializer.data)

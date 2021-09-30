@@ -37,3 +37,8 @@ class MenuLikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = MenuLikes
         fields = '__all__'
+
+class FavouriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Menu
+        fields = ('id', 'item_name', 'favourite')

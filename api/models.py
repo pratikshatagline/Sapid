@@ -9,6 +9,10 @@ class Restaurant(models.Model):
 class Menu(models.Model):
     restaurant_id = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='menu')
     item_name = models.CharField(max_length=100, null=True)
+    favourite =models.ManyToManyField(User, related_name='favourite', blank=True)
+
+    def get_favourite(self):
+        return ",".join([str(p) for p in self.favourite.all()])
 
 class MenuLikes(models.Model):
     likeusers = models.ManyToManyField(User)
