@@ -76,15 +76,12 @@ class MenuAPI(APIView):
 
 class LikedAPI(APIView):
 
-    def get(self, request):#function to get total number of likes to particular post
-        #id = request.GET.get("id")
-        post = MenuLikes.objects.all() # find which post's likes are to be extracted
-        #like_count = post.likemenu.count()# counts total user likes ,besides my code is wrong
+    def get(self, request):
+        post = MenuLikes.objects.all()
         serializer = MenuLikeSerializer(post,many=True)
         return Response(serializer.data)
 
-    def post(self,request):#function to add likes to post
-        # how do I check if user is already liked the post ?
+    def post(self,request):
         id = request.GET.get("id")
         likeusers = request.user
         likemenu = Menu.objects.filter(id=id)
